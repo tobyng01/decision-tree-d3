@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Decision Tree D3</title>
+    <style>
+        .node circle {
+            fill: #fff;
+            stroke: steelblue;
+            stroke-width: 3px;
+        }
+
+        .node text {
+            font: 12px sans-serif;
+        }
+
+        .link {
+            fill: none;
+            stroke: #ccc;
+            stroke-width: 2px;
+        }
+
+        svg {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+
+<body>
+    <input type="file" id="inputFileData">
+    <script src="papaparse.min.js"></script>
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <script src="main.js"></script>
+</body>
+
+</html>

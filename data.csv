@@ -1,0 +1,21 @@
+Parcel ID,Origin,Destination,Type,Weight
+1,HK,HK,Parcel,Light
+2,Kln,Kln,Letter,Light
+3,NT,Kln,Letter,Light
+4,HK,HK,Parcel,Heavy
+5,Kln,Kln,Parcel,Light
+6,NT,NT,Letter,Light
+7,HK,HK,Letter,Light
+8,Kln,Kln,Parcel,Heavy
+9,Kln,Kln,Letter,Light
+10,HK,HK,Letter,Light
+11,HK,HK,Parcel,Heavy
+12,Kln,Kln,Letter,Light
+13,HK,HK,Letter,Light
+14,Kln,Kln,Parcel,Light
+15,HK,NT,Parcel,Heavy
+16,NT,Kln,Letter,Light
+17,HK,NT,Letter,Light
+18,Kln,HK,Parcel,Light
+19,HK,NT,Parcel,Heavy
+20,HK,HK,Parcel,Light
