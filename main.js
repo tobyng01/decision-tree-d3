@@ -7,7 +7,7 @@ function ID3(rows, headers, decisionAttr) {
     if (decisions.length === 2) { // 'p' & 'n' for I(p,n)
         const tree = new ID3Tree()
         console.log(tree)
-        visualizeTree(tree)
+        visualizeTree(tree, 'd3-tree')
     }
 
     function ID3Tree() {
@@ -77,16 +77,16 @@ function ID3(rows, headers, decisionAttr) {
             }
         }
         this.toJson = function () {
-            // JSON-ify tree; starting from root node
+            // JSON-ify tree starting from root node
             return getNodeJson('', this.root, null)
 
             function getNodeJson(key, node, parent) {
                 // make string for node link
-                const linkStr = key ? `${key} -> ` : ''
                 return node.decision ? // is leaf node?
-                    { name: `${linkStr}${node.decision}`, parent: parent } :
+                    { key: key, label: node.decision, parent: parent } :
                     {
-                        name: `${linkStr}${node.attr}`,
+                        key: key,
+                        label: node.attr,
                         // recursively get child nodes JSON
                         children: Object.keys(node.children).map(childNodeKey => {
                             return getNodeJson(childNodeKey, node.children[childNodeKey], node.attr)
@@ -119,7 +119,7 @@ function ID3(rows, headers, decisionAttr) {
         return categories
     }
     function information(p, n) {
-        // zero-check: Math.log(0) returns '-Infinity'; return 0 instead
+        // zero-check: Math.log(0) returns '-Infinity' return 0 instead
         if (p / (p + n) === 0 || n / (p + n) === 0) return 0
         return -(p / (p + n)) * Math.log2(p / (p + n)) - (n / (p + n)) * Math.log2(n / (p + n))
     }
@@ -139,68 +139,71 @@ function ID3(rows, headers, decisionAttr) {
         return entropy
     }
 
-    function visualizeTree(id3Tree) {
+    function visualizeTree(id3Tree, elementID) {
         const margin = { top: 40, right: 120, bottom: 20, left: 120 },
             width = (window.innerWidth * 0.95) - margin.right - margin.left,
-            height = 500 - margin.top - margin.bottom;
-
-        var i = 0;
+            height = 500 - margin.top - margin.bottom
+        const nodeWidth = 100, nodeHeight = 60
+        var i = 0
 
         var tree = d3.layout.tree()
-            .size([height, width]);
+            // .size([width, height])
+            .nodeSize([nodeWidth * 1.2, nodeHeight])
 
-        var diagonal = d3.svg.diagonal()
-            .projection(function (d) { return [d.x, d.y]; });
-
-        const svg = d3.select('body').append('svg')
+        const svg = d3.select('#' + elementID).append('svg')
             .attr('width', width + margin.right + margin.left)
             .attr('height', height + margin.top + margin.bottom)
             .append('g')
-            .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
+            .attr('transform', `translate(${width},${margin.top})`)
 
-        var root = id3Tree.toJson()
+        var root = id3Tree.toJson((key, node) => `${key ? key + ':' : ''} ${node}`)
         update(root)
 
         function update(source) {
             // Compute the new tree layout.
-            var nodes = tree.nodes(root).reverse(),
-                links = tree.links(nodes);
+            var nodes = tree.nodes(root).reverse(), links = tree.links(nodes)
 
             // Normalize for fixed-depth.
-            nodes.forEach(function (d) { d.y = d.depth * 100; });
-
-            // Declare the nodes…
+            nodes.forEach(d => { d.y = d.depth * 120 })
+            // tree nodes
             var node = svg.selectAll("g.node")
-                .data(nodes, function (d) { return d.id || (d.id = ++i); });
-
-            // Enter the nodes.
+                .data(nodes, d => d.id || (d.id = ++i))
+            // enter nodes
             var nodeEnter = node.enter().append("g")
                 .attr("class", "node")
-                .attr("transform", function (d) {
-                    return "translate(" + d.x + "," + d.y + ")";
-                });
+                .attr("transform", d => `translate(${d.x},${d.y})`)
+            // draw diamond shape node
+            nodeEnter.append("polygon")
+                .attr("points", makeDiamond(nodeWidth, nodeHeight))
+            // node key i.e. decision leading to node
+            appendText(nodeEnter, -nodeHeight * 3 / 4, d => d.key)
+            // node label i.e. node attribute
+            appendText(nodeEnter, 0, d => d.label)
+            // draw line connecting tree nodes
+            var link = svg.selectAll('line.link')
+                .data(links, d => d.target.id)
+            link.enter().insert("line", "g")
+                .attr("class", "link")
+                .attr('x1', d => d.source.x)
+                .attr('y1', d => d.source.y + nodeHeight / 2)
+                .attr('x2', d => d.target.x)
+                .attr('y2', d => d.target.y - nodeHeight / 2)
+        }
 
-            nodeEnter.append("circle")
-                .attr("r", 10)
-                .style("fill", "#fff");
-
-            nodeEnter.append("text")
-                .attr("y", function (d) {
-                    return d.children || d._children ? -18 : 18;
-                })
+        function appendText(node, y, textFn) {
+            node.append("text")
+                .attr("y", y)
                 .attr("dy", ".35em")
                 .attr("text-anchor", "middle")
-                .text(function (d) { return d.name; })
-                .style("fill-opacity", 1);
+                .text(textFn)
+        }
 
-            // Declare the links…
-            var link = svg.selectAll("path.link")
-                .data(links, function (d) { return d.target.id; });
-
-            // Enter the links.
-            link.enter().insert("path", "g")
-                .attr("class", "link")
-                .attr("d", diagonal);
+        function makeDiamond(width, height) {
+            const top = '0,' + (-height / 2)
+            const right = (width / 2) + ',0'
+            const bottom = '0,' + (height / 2)
+            const left = (-width / 2) + ',0'
+            return `${top} ${right} ${bottom} ${left}`
         }
     }
 }
@@ -246,7 +249,8 @@ function readFile(file) {
     Papa.parse(file, {
         header: true,
         complete: res => {
-            ID3(res.data, res.meta.fields, 'Type')
+            // TODO: prompt user for selecting fields for generating decision tree
+            // ID3(res.data, res.meta.fields, 'Type')
         }
     })
 }
