@@ -140,38 +140,50 @@ function ID3(rows, headers, decisionAttr) {
     }
 
     function visualizeTree(id3Tree, elementID) {
-        const margin = { top: 40, right: 120, bottom: 20, left: 120 },
-            width = (window.innerWidth * 0.95) - margin.right - margin.left,
+        const margin = { top: 40, right: 0, bottom: 20, left: 140 },
             height = 500 - margin.top - margin.bottom
-        const nodeWidth = 100, nodeHeight = 60
+        var width = window.innerWidth - margin.right - margin.left
+        var nodeWidth = window.innerWidth / 8, nodeHeight = nodeWidth * 0.6
         var i = 0
 
-        var tree = d3.layout.tree()
-            // .size([width, height])
-            .nodeSize([nodeWidth * 1.2, nodeHeight])
-
-        const svg = d3.select('#' + elementID).append('svg')
+        const svgContainer = d3.select('#' + elementID)
+        // SVG width relative to container width
+        width = svgContainer[0][0].clientWidth - margin.right - margin.left
+        const svg = svgContainer.append('svg')
             .attr('width', width + margin.right + margin.left)
             .attr('height', height + margin.top + margin.bottom)
             .append('g')
-            .attr('transform', `translate(${width},${margin.top})`)
+            .attr('transform', `translate(${margin.left + width / 2},${margin.top})`)
 
         var root = id3Tree.toJson((key, node) => `${key ? key + ':' : ''} ${node}`)
-        update(root)
+        update()
 
-        function update(source) {
-            // Compute the new tree layout.
+        // resize SVG element according to parent container
+        window.addEventListener('resize', () => {
+            width = svgContainer[0][0].clientWidth - margin.right - margin.left
+            svgContainer.select('svg')
+                .attr('width', width + margin.right + margin.left)
+                .select('g')
+                .attr('transform', `translate(${margin.left + width / 2},${margin.top})`)
+            nodeWidth = window.innerWidth / 8, nodeHeight = nodeWidth * 0.6
+            update()
+        })
+
+        function update() {
+            var tree = d3.layout.tree()
+                // .size([width, height])
+                .nodeSize([nodeWidth * 1.2, nodeHeight])
             var nodes = tree.nodes(root).reverse(), links = tree.links(nodes)
-
-            // Normalize for fixed-depth.
             nodes.forEach(d => { d.y = d.depth * 120 })
+
             // tree nodes
             var node = svg.selectAll("g.node")
                 .data(nodes, d => d.id || (d.id = ++i))
             // enter nodes
             var nodeEnter = node.enter().append("g")
                 .attr("class", "node")
-                .attr("transform", d => `translate(${d.x},${d.y})`)
+            // update all
+            node.attr("transform", d => `translate(${d.x},${d.y})`)
             // draw diamond shape node
             nodeEnter.append("polygon")
                 .attr("points", makeDiamond(nodeWidth, nodeHeight))
@@ -179,12 +191,14 @@ function ID3(rows, headers, decisionAttr) {
             appendText(nodeEnter, -nodeHeight * 3 / 4, d => d.key)
             // node label i.e. node attribute
             appendText(nodeEnter, 0, d => d.label)
+
             // draw line connecting tree nodes
             var link = svg.selectAll('line.link')
                 .data(links, d => d.target.id)
             link.enter().insert("line", "g")
                 .attr("class", "link")
-                .attr('x1', d => d.source.x)
+            // update all
+            link.attr('x1', d => d.source.x)
                 .attr('y1', d => d.source.y + nodeHeight / 2)
                 .attr('x2', d => d.target.x)
                 .attr('y2', d => d.target.y - nodeHeight / 2)
@@ -239,7 +253,7 @@ Papa.parse(`Parcel ID,Origin,Destination,Type,Weight
         }
     })
 
-// obtain data file from HTML input element, then read and parse
+// obtain data file from HTML file input element, then read and parse
 const inputFileData = document.getElementById('inputFileData')
 inputFileData.addEventListener('change', e => {
     const file = e.target.files[0]
