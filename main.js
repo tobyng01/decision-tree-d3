@@ -222,6 +222,33 @@ function ID3(rows, headers, decisionAttr) {
     }
 }
 
+function showDataTable(rows, headers) {
+    const dataTable = document.getElementById('data-table')
+    dataTable.innerHTML = '' // clear HTML first
+    // add table headers
+    const thead = document.createElement('thead')
+    const trHeader = document.createElement('tr')
+    for (let header of headers) {
+        const th = document.createElement('th')
+        th.innerHTML = header
+        trHeader.appendChild(th)
+    }
+    thead.appendChild(trHeader)
+    dataTable.appendChild(thead)
+    // add table rows
+    const tbody = document.createElement('tbody')
+    for (let row of rows) {
+        const trBody = document.createElement('tr')
+        for (let attr in row) {
+            const td = document.createElement('td')
+            td.innerHTML = row[attr]
+            trBody.appendChild(td)
+        }
+        tbody.appendChild(trBody)
+    }
+    dataTable.appendChild(tbody)
+}
+
 Papa.parse(`Parcel ID,Origin,Destination,Type,Weight
 1,HK,HK,Parcel,Light
 2,Kln,Kln,Letter,Light
@@ -245,10 +272,12 @@ Papa.parse(`Parcel ID,Origin,Destination,Type,Weight
 20,HK,HK,Parcel,Light`, {
         header: true,
         complete: res => {
+            // show data on table view
+            showDataTable(res.data, res.meta.fields)
+            // run ID3 algorithm on data
             // removing 'Parcel ID' Attr: no need for decision tree
             res.data.forEach(row => { delete row['Parcel ID'] })
             res.meta.fields.splice(res.meta.fields.indexOf('Parcel ID'), 1)
-            // run ID3 algorithm on data
             ID3(res.data, res.meta.fields, 'Type')
         }
     })
