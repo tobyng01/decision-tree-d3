@@ -138,12 +138,11 @@ function ID3(rows, headers, decisionAttr) {
         }
         return entropy
     }
-
+    // display decision tree as D3 diagram
     function visualizeTree(id3Tree, elementID) {
         const margin = { top: 40, right: 0, bottom: 20, left: 140 },
             height = 500 - margin.top - margin.bottom
         var width = window.innerWidth - margin.right - margin.left
-        var nodeWidth = window.innerWidth / 8, nodeHeight = nodeWidth * 0.6
         var i = 0
 
         const svgContainer = d3.select('#' + elementID)
@@ -165,38 +164,47 @@ function ID3(rows, headers, decisionAttr) {
                 .attr('width', width + margin.right + margin.left)
                 .select('g')
                 .attr('transform', `translate(${margin.left + width / 2},${margin.top})`)
-            nodeWidth = window.innerWidth / 8, nodeHeight = nodeWidth * 0.6
             update()
         })
 
         function update() {
-            var tree = d3.layout.tree()
+            // clamp node width between 100px & some fraction of window width
+            const nodeWidth = window.innerWidth / 8 > 100 ? 100 : window.innerWidth / 8,
+                nodeHeight = nodeWidth * 0.6
+
+            const tree = d3.layout.tree()
                 // .size([width, height])
                 .nodeSize([nodeWidth * 1.2, nodeHeight])
-            var nodes = tree.nodes(root).reverse(), links = tree.links(nodes)
+            const nodes = tree.nodes(root).reverse(), links = tree.links(nodes)
             nodes.forEach(d => { d.y = d.depth * 120 })
 
             // tree nodes
-            var node = svg.selectAll("g.node")
+            const node = svg.selectAll('g.node')
                 .data(nodes, d => d.id || (d.id = ++i))
-            // enter nodes
-            var nodeEnter = node.enter().append("g")
-                .attr("class", "node")
-            // update all
-            node.attr("transform", d => `translate(${d.x},${d.y})`)
-            // draw diamond shape node
-            nodeEnter.append("polygon")
-                .attr("points", makeDiamond(nodeWidth, nodeHeight))
-            // node key i.e. decision leading to node
-            appendText(nodeEnter, -nodeHeight * 3 / 4, d => d.key)
-            // node label i.e. node attribute
-            appendText(nodeEnter, 0, d => d.label)
+
+            // ENTER: make nodes
+            const nodeEnter = node.enter().append('g')
+                .attr('class', 'node')
+            nodeEnter.append('polygon') // node shape
+            // node text: decision & attribute
+            nodeEnter.append('text').attr('class', 'decision')
+            nodeEnter.append('text').attr('class', 'label')
+
+            // UPDATE: set node position
+            node.attr('transform', d => `translate(${d.x},${d.y})`)
+            // make node polygon shape
+            node.selectAll('polygon')
+                .attr('points', makeDiamond(nodeWidth, nodeHeight))
+            // node key: decision leading to node
+            setNodeText(node.selectAll('text.decision'), -nodeHeight * 3 / 4, d => d.key)
+            // node label: attribute
+            setNodeText(node.selectAll('text.label'), 0, d => d.label)
 
             // draw line connecting tree nodes
-            var link = svg.selectAll('line.link')
+            const link = svg.selectAll('line.link')
                 .data(links, d => d.target.id)
-            link.enter().insert("line", "g")
-                .attr("class", "link")
+            link.enter().insert('line', 'g')
+                .attr('class', 'link')
             // update all
             link.attr('x1', d => d.source.x)
                 .attr('y1', d => d.source.y + nodeHeight / 2)
@@ -204,11 +212,10 @@ function ID3(rows, headers, decisionAttr) {
                 .attr('y2', d => d.target.y - nodeHeight / 2)
         }
 
-        function appendText(node, y, textFn) {
-            node.append("text")
-                .attr("y", y)
-                .attr("dy", ".35em")
-                .attr("text-anchor", "middle")
+        function setNodeText(textNode, y, textFn) {
+            textNode.attr('y', y)
+                .attr('dy', '.35em')
+                .attr('text-anchor', 'middle')
                 .text(textFn)
         }
 
