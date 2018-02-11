@@ -37,6 +37,7 @@
 <body>
     <div class="container-fluid app">
         <h2 class="display-4 text-center">Decision Tree D3</h2>
+        <!-- file upload -->
         <div class="input-group mb-3">
             <div class="input-group-prepend">
                 <span class="input-group-text">Upload Data CSV</span>
@@ -46,16 +47,21 @@
                 <label class="custom-file-label" for="inputGroupFile01">Choose file</label>
             </div>
         </div>
+        <!-- D3 tree -->
         <div class="tree-diagram">
             <div id="d3-tree" class="card border-0"></div>
         </div>
+        <!-- data table -->
         <div class="card">
             <table id="data-table" class="table"></table>
         </div>
     </div>
 
-    <script src="papaparse.min.js"></script>
-    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <!-- PapaParse -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/4.3.7/papaparse.min.js"></script>
+    <!-- D3 v3 -->
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+    <!-- Bootstrap -->
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
         crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
