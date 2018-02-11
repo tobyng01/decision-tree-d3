@@ -37,8 +37,17 @@
 <body>
     <div class="container-fluid app">
         <h2 class="display-4 text-center">Decision Tree D3</h2>
+        <!-- select dataset -->
+        <div class="dropdown">
+            <button class="btn btn-secondary dropdown-toggle" type="button" data-toggle="dropdown">
+                Select Example Dataset
+            </button>
+            <div id="ddDatasetsMenu" class="dropdown-menu">
+                <!-- to be populated by script -->
+            </div>
+        </div>
         <!-- file upload -->
-        <div class="input-group mb-3">
+        <!-- <div class="input-group mb-3">
             <div class="input-group-prepend">
                 <span class="input-group-text">Upload Data CSV</span>
             </div>
@@ -46,7 +55,7 @@
                 <input type="file" id="inputFileData" class="custom-file-input">
                 <label class="custom-file-label" for="inputGroupFile01">Choose file</label>
             </div>
-        </div>
+        </div> -->
         <!-- D3 tree -->
         <div class="tree-diagram">
             <div id="d3-tree" class="card border-0"></div>

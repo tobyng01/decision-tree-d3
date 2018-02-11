@@ -140,6 +140,8 @@ function ID3(rows, headers, decisionAttr) {
     }
     // display decision tree as D3 diagram
     function visualizeTree(id3Tree, elementID) {
+        document.getElementById(elementID).innerHTML = '' // clear SVG first
+
         const margin = { top: 40, right: 0, bottom: 20, left: 140 },
             height = 500 - margin.top - margin.bottom
         var width = window.innerWidth - margin.right - margin.left
@@ -256,7 +258,62 @@ function showDataTable(rows, headers) {
     dataTable.appendChild(tbody)
 }
 
-Papa.parse(`Parcel ID,Origin,Destination,Type,Weight
+function parseData(textData) {
+    Papa.parse(textData, {
+        header: true,
+        complete: res => {
+            // show data on table view
+            showDataTable(res.data, res.meta.fields)
+            // run ID3 algorithm on data
+            // removing 'Parcel ID' Attr: no need for decision tree
+            res.data.forEach(row => { delete row['Parcel ID'] })
+            res.meta.fields.splice(res.meta.fields.indexOf('Parcel ID'), 1)
+            ID3(res.data, res.meta.fields, 'Type')
+        }
+    })
+}
+
+// Datasets
+const datasets = {
+    'HK Postage (20 rows)': 'hk_postage.csv'
+}
+// Populate datasets menu
+const ddDatasetsMenu = document.getElementById('ddDatasetsMenu')
+for (let key in datasets) {
+    const btnDataset = document.createElement('button')
+    btnDataset.type = 'button'
+    btnDataset.classList.add('dropdown-item')
+    btnDataset.innerHTML = `${key}`
+    btnDataset.addEventListener('click', e => {
+        // read & process dataset file
+        fetch(`datasets/${datasets[key]}`)
+            .then(res => res.text())
+            .then(text => {
+                parseData(text)
+            })
+    })
+    ddDatasetsMenu.appendChild(btnDataset)
+}
+
+// TODO: Obtain data file from HTML file input element, then read and parse
+// const inputFileData = document.getElementById('inputFileData')
+// inputFileData.addEventListener('change', e => {
+//     const file = e.target.files[0]
+//     if (file) readFile(file)
+// })
+// function readFile(file) {
+//     Papa.parse(file, {
+//         header: true,
+//         complete: res => {
+//             // TODO: prompt user for selecting fields for generating decision tree
+//             // ID3(res.data, res.meta.fields, 'Type')
+//         }
+//     })
+// }
+
+// TODO: test data as string, just for rapid development
+parseData(
+    `Parcel ID,Origin,Destination,Type,Weight
 1,HK,HK,Parcel,Light
 2,Kln,Kln,Letter,Light
 3,NT,Kln,Letter,Light
@@ -276,31 +333,4 @@ Papa.parse(`Parcel ID,Origin,Destination,Type,Weight
 17,HK,NT,Letter,Light
 18,Kln,HK,Parcel,Light
 19,HK,NT,Parcel,Heavy
-20,HK,HK,Parcel,Light`, {
-        header: true,
-        complete: res => {
-            // show data on table view
-            showDataTable(res.data, res.meta.fields)
-            // run ID3 algorithm on data
-            // removing 'Parcel ID' Attr: no need for decision tree
-            res.data.forEach(row => { delete row['Parcel ID'] })
-            res.meta.fields.splice(res.meta.fields.indexOf('Parcel ID'), 1)
-            ID3(res.data, res.meta.fields, 'Type')
-        }
-    })
-
-// obtain data file from HTML file input element, then read and parse
-const inputFileData = document.getElementById('inputFileData')
-inputFileData.addEventListener('change', e => {
-    const file = e.target.files[0]
-    if (file) readFile(file)
-})
-function readFile(file) {
-    Papa.parse(file, {
-        header: true,
-        complete: res => {
-            // TODO: prompt user for selecting fields for generating decision tree
-            // ID3(res.data, res.meta.fields, 'Type')
-        }
-    })
-}
+20,HK,HK,Parcel,Light`)
